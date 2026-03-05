@@ -14,7 +14,7 @@ public class ApiTest {
 
     @Test
     void test() {
-        System.out.println("a");
+        System.out.println("aaa");
     }
 
 }
