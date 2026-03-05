@@ -1,12 +1,13 @@
+# 测试：执行脚本，构建环境，并执行代码
 name: Run Java Git Diff By Local
 
 on:
   push:
     branches:
-      - '*'
+      - master-close # 关闭执行
   pull_request:
     branches:
-      - '*'
+      - master-close
 
 jobs:
   build-and-run:
