@@ -112,7 +112,7 @@ public class OpenAiCodeReview {
 
         String logFilePrefix = new SimpleDateFormat("HHmm").format(currentDate);
         String fileName = logFilePrefix + "_" + generateRandomString(10);
-        File file = new File(logFilePrefix, fileName);
+        File file = new File(logFolder, fileName);
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write(log);
         }
