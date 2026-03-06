@@ -138,8 +138,9 @@ public class OpenAiCodeReview {
         Message message = new Message();
         message.put("project", "openai-code-review");
         message.put("review", "feat: 代码评审");
+        message.setUrl(logUrl);
 
-        String url = String.format(logUrl, accessToken);
+        String url = String.format("https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=%s", accessToken);
         sendPostRequest(url, JSON.toJSONString(message));
     }
 

@@ -9,7 +9,7 @@ public class Message {
     String template_id = "fIF8KEE0MOrlv6CuAaVtzKMn4T_OTr3TJeOu8lWXGhc";
 
     // 日志 url, 用于跳转
-    String url = "https://github.com/burn1t/openai-code-review-log/blob/main/2026-03-06/0728_7VJhhUYpM6.md";
+    String url;
 
     HashMap<String, HashMap<String, String>> data = new HashMap<>();
 
