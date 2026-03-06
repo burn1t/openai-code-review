@@ -111,7 +111,7 @@ public class OpenAiCodeReview {
         }
 
         String logFilePrefix = new SimpleDateFormat("HHmm").format(currentDate);
-        String fileName = logFilePrefix + "_" + generateRandomString(10);
+        String fileName = logFilePrefix + "_" + generateRandomString(10) + ".md";
         File file = new File(logFolder, fileName);
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write(log);
