@@ -1,0 +1,10 @@
+{
+	"model":"glm-4-flash",
+	"stream": "true",
+	"messages": [
+		{
+			"role": "user",
+			"content": "你好"
+		}
+	]
+}
