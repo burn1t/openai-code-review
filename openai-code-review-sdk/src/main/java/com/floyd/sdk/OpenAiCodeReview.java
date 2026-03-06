@@ -3,8 +3,10 @@ package com.floyd.sdk;
 import com.alibaba.fastjson2.JSON;
 import com.floyd.sdk.domain.model.ChatCompletionRequest;
 import com.floyd.sdk.domain.model.ChatCompletionSyncResponse;
+import com.floyd.sdk.domain.model.Message;
 import com.floyd.sdk.domain.model.Model;
 import com.floyd.sdk.types.utils.BearerTokenUtils;
+import com.floyd.sdk.types.utils.WXAccessTokenUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -17,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
+import java.util.Scanner;
 
 public class OpenAiCodeReview {
 
@@ -54,6 +57,9 @@ public class OpenAiCodeReview {
 
         String logUrl = writeLog(token, log);
         System.out.println("writeLog：" + logUrl);
+
+        System.out.println("正在推送消息");
+        pushMessage(logUrl);
     }
 
     public static String codeReview(String code) throws IOException {
@@ -126,6 +132,17 @@ public class OpenAiCodeReview {
         return "https://github.com/burn1t/openai-code-review-log/blob/master/" + logFolderName + "/" + fileName;
     }
 
+    public static void pushMessage(String logUrl) {
+        String accessToken = WXAccessTokenUtils.getAccessToken();
+
+        Message message = new Message();
+        message.put("project", "openai-code-review");
+        message.put("review", "feat: 代码评审");
+
+        String url = String.format(logUrl, accessToken);
+        sendPostRequest(url, JSON.toJSONString(message));
+    }
+
     public static String generateRandomString(int length) {
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
@@ -134,6 +151,29 @@ public class OpenAiCodeReview {
             stringBuilder.append(characters.charAt(random.nextInt(characters.length())));
         }
         return stringBuilder.toString();
+    }
+
+    private static void sendPostRequest(String urlString, String jsonBody) {
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonBody.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            try (Scanner scanner = new Scanner(conn.getInputStream(), StandardCharsets.UTF_8.name())) {
+                String response = scanner.useDelimiter("\\A").next();
+                System.out.println(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
