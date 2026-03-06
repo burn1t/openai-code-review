@@ -107,7 +107,7 @@ public class OpenAiCodeReview {
         String logFolderName = new SimpleDateFormat("yyyy-MM-dd").format(currentDate);
         File logFolder = new File("repo/" + logFolderName);
         if (!logFolder.exists()) {
-            logFolder.mkdir();
+            logFolder.mkdirs();
         }
 
         String logFilePrefix = new SimpleDateFormat("HHmm").format(currentDate);
