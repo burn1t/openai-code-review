@@ -118,10 +118,12 @@ public class OpenAiCodeReview {
         }
 
         // 提交并推送日志文件至评审日志仓库
-        git.add().addFilepattern(logFolder + "/" + fileName).call();
+        git.add().addFilepattern(logFolderName + "/" + fileName).call();
         git.commit().setMessage("docs: Add new file via GitHub Actions").call();
         git.push().setCredentialsProvider(new UsernamePasswordCredentialsProvider(token, "")).call();
-        return "https://github.com/burn1t/openai-code-review-log/blob/master/" + logFolder + "/" + fileName;
+        System.out.println("Changes have been pushed to the repository.");
+
+        return "https://github.com/burn1t/openai-code-review-log/blob/master/" + logFolderName + "/" + fileName;
     }
 
     public static String generateRandomString(int length) {
