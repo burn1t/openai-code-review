@@ -18,8 +18,12 @@ public class WXAccessTokenUtils {
     private static final String URL_TEMPLATE = "https://api.weixin.qq.com/cgi-bin/token?grant_type=%s&appid=%s&secret=%s";
 
     public static String getAccessToken() {
+        return getAccessToken(APPID, SECRET);
+    }
+
+    public static String getAccessToken(String appid, String secret) {
         try {
-            String urlString = String.format(URL_TEMPLATE, GRANT_TYPE, APPID, SECRET);
+            String urlString = String.format(URL_TEMPLATE, GRANT_TYPE, appid, secret);
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");

@@ -1,15 +1,22 @@
 package com.floyd.sdk;
 
 import com.alibaba.fastjson2.JSON;
-import com.floyd.sdk.domain.model.ChatCompletionRequest;
-import com.floyd.sdk.domain.model.ChatCompletionSyncResponse;
-import com.floyd.sdk.domain.model.Message;
 import com.floyd.sdk.domain.model.Model;
+import com.floyd.sdk.domain.service.impl.OpenAiCodeReviewService;
+import com.floyd.sdk.infrastructure.git.GitCommand;
+import com.floyd.sdk.infrastructure.openai.IOpenAI;
+import com.floyd.sdk.infrastructure.openai.dto.ChatCompletionRequestDTO;
+import com.floyd.sdk.infrastructure.openai.dto.ChatCompletionSyncResponseDTO;
+import com.floyd.sdk.infrastructure.openai.impl.ChatGLM;
+import com.floyd.sdk.infrastructure.weixin.Weixin;
+import com.floyd.sdk.infrastructure.weixin.dto.TemplateMessageDTO;
 import com.floyd.sdk.types.utils.BearerTokenUtils;
 import com.floyd.sdk.types.utils.WXAccessTokenUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -27,40 +34,97 @@ public class OpenAiCodeReview {
 
     public final static String URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
-    public static void main(String[] args) throws IOException, InterruptedException, GitAPIException {
-        System.out.println("openai 代码评审，测试执行");
+    private static final Logger logger = LoggerFactory.getLogger(OpenAiCodeReview.class);
 
-        String token = System.getenv("GITHUB_TOKEN");
-        if (null == token || token.isEmpty()) {
-            throw new RuntimeException("token is null");
-        }
+    // 配置配置
+    private String weixin_appid = "wx5a228ff69e28a91f";
+    private String weixin_secret = "0bea03aa1310bac050aae79dd8703928";
+    private String weixin_touser = "or0Ab6ivwmypESVp_bYuk92T6SvU";
+    private String weixin_template_id = "l2HTkntHB71R4NQTW77UkcqvSOIFqE_bss1DAVQSybc";
 
-        // 1.代码检出：基于 Github action 环境，在 Java 程序中调用 Git 命令，获取当前仓库最近一次提交的代码变更内容
-        ProcessBuilder processBuilder = new ProcessBuilder("git", "diff", "HEAD~1", "HEAD");
-        // 设置工作目录为当前项目根目录，告诉 Git 命令在哪个文件夹下执行
-        ProcessBuilder directory = processBuilder.directory(new File("."));
+    // ChatGLM 配置
+    private String chatglm_apiHost = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+    private String chatglm_apiKeySecret = "";
 
-        Process process = directory.start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String line;
+    // Github 配置
+    private String github_review_log_uri;
+    private String github_token;
 
-        StringBuilder diffCode = new StringBuilder();
-        while ((line = reader.readLine()) != null) {
-            diffCode.append(line);
-        }
+    // 工程配置 - 自动获取
+    private String github_project;
+    private String github_branch;
+    private String github_author;
 
-        int exitCode = process.waitFor();
-        System.out.println("Exited with code: " + exitCode);
+    public static void main(String[] args) throws Exception {
+        GitCommand gitCommand = new GitCommand(
+                getEnv("CODE_REVIEW_LOG_URI"),
+                getEnv("CODE_TOKEN"),
+                getEnv("COMMIT_PROJECT"),
+                getEnv("COMMIT_BRANCH"),
+                getEnv("COMMIT_AUTHOR"),
+                getEnv("COMMIT_MESSAGE")
+        );
 
-        String log = codeReview(diffCode.toString());
-        System.out.println("评审代码: " + log);
+        /**
+         * 项目：{{repo_name.DATA}} 分支：{{branch_name.DATA}} 作者：{{commit_author.DATA}} 说明：{{commit_message.DATA}}
+         */
+        Weixin weiXin = new Weixin(
+                getEnv("WEIXIN_APPID"),
+                getEnv("WEIXIN_SECRET"),
+                getEnv("WEIXIN_TOUSER"),
+                getEnv("WEIXIN_TEMPLATE_ID")
+        );
 
-        String logUrl = writeLog(token, log);
-        System.out.println("writeLog：" + logUrl);
+        IOpenAI openAI = new ChatGLM(getEnv("CHATGLM_APIHOST"), getEnv("CHATGLM_APIKEYSECRET"));
 
-        System.out.println("正在推送消息");
-        pushMessage(logUrl);
+        OpenAiCodeReviewService openAiCodeReviewService = new OpenAiCodeReviewService(gitCommand, openAI, weiXin);
+        openAiCodeReviewService.exec();
+        logger.info("openai-code-review done!");
     }
+
+    private static String getEnv(String key) {
+        String value = System.getenv(key);
+        if (null == value || value.isEmpty()) {
+            throw new RuntimeException("value is null");
+        }
+        return value;
+    }
+
+
+//    public static void main(String[] args) throws IOException, InterruptedException, GitAPIException {
+//        System.out.println("openai 代码评审，测试执行");
+//
+//        String token = System.getenv("GITHUB_TOKEN");
+//        if (null == token || token.isEmpty()) {
+//            throw new RuntimeException("token is null");
+//        }
+//
+//        // 1.代码检出：基于 Github action 环境，在 Java 程序中调用 Git 命令，获取当前仓库最近一次提交的代码变更内容
+//        ProcessBuilder processBuilder = new ProcessBuilder("git", "diff", "HEAD~1", "HEAD");
+//        // 设置工作目录为当前项目根目录，告诉 Git 命令在哪个文件夹下执行
+//        ProcessBuilder directory = processBuilder.directory(new File("."));
+//
+//        Process process = directory.start();
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//        String line;
+//
+//        StringBuilder diffCode = new StringBuilder();
+//        while ((line = reader.readLine()) != null) {
+//            diffCode.append(line);
+//        }
+//
+//        int exitCode = process.waitFor();
+//        System.out.println("Exited with code: " + exitCode);
+//
+//        String log = codeReview(diffCode.toString());
+//        System.out.println("评审代码: " + log);
+//
+//        String logUrl = writeLog(token, log);
+//        System.out.println("writeLog：" + logUrl);
+//
+//        System.out.println("正在推送消息");
+//        pushMessage(logUrl);
+//    }
 
     public static String codeReview(String code) throws IOException {
         String token = BearerTokenUtils.getToken(API_KEY_SECRET);
@@ -73,11 +137,11 @@ public class OpenAiCodeReview {
         connection.setDoOutput(true);
 
         // 为避免 code 的格式混乱，导致无法发送请求
-        ChatCompletionRequest request = new ChatCompletionRequest();
+        ChatCompletionRequestDTO request = new ChatCompletionRequestDTO();
         request.setModel(Model.GLM_4_FLASH.getCode());
         request.setMessages(Arrays.asList(
-                new ChatCompletionRequest.Prompt("user", "你是一个高级编程架构师，精通各类场景方案、架构设计和编程语言，请您根据git diff记录，对代码做出评审。代码为"),
-                new ChatCompletionRequest.Prompt("user", code)
+                new ChatCompletionRequestDTO.Prompt("user", "你是一个高级编程架构师，精通各类场景方案、架构设计和编程语言，请您根据git diff记录，对代码做出评审。代码为"),
+                new ChatCompletionRequestDTO.Prompt("user", code)
         ));
 
         try (OutputStream outputStream = connection.getOutputStream()) {
@@ -95,7 +159,7 @@ public class OpenAiCodeReview {
             }
         }
 
-        ChatCompletionSyncResponse response = JSON.parseObject(content.toString(), ChatCompletionSyncResponse.class);
+        ChatCompletionSyncResponseDTO response = JSON.parseObject(content.toString(), ChatCompletionSyncResponseDTO.class);
         return response.getChoices().get(0).getMessage().getContent();
     }
 
@@ -135,13 +199,13 @@ public class OpenAiCodeReview {
     public static void pushMessage(String logUrl) {
         String accessToken = WXAccessTokenUtils.getAccessToken();
 
-        Message message = new Message();
-        message.put("project", "openai-code-review");
-        message.put("review", "feat: 代码评审");
-        message.setUrl(logUrl);
+        TemplateMessageDTO templateMessageDTO = new TemplateMessageDTO("wx4617d5873082286a", "28bb42cb8c3e0015b7728d6ce5510be5");
+        templateMessageDTO.put("project", "openai-code-review");
+        templateMessageDTO.put("review", "feat: 代码评审");
+        templateMessageDTO.setUrl(logUrl);
 
         String url = String.format("https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=%s", accessToken);
-        sendPostRequest(url, JSON.toJSONString(message));
+        sendPostRequest(url, JSON.toJSONString(templateMessageDTO));
     }
 
     public static String generateRandomString(int length) {
