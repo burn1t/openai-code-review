@@ -30,32 +30,9 @@ import java.util.Scanner;
 
 public class OpenAiCodeReview {
 
-    public final static String API_KEY_SECRET = "d37c4f500b504addbb5e265fc933daa0.czrCITvIzMuM9NNI";
-
-    public final static String URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
-
     private static final Logger logger = LoggerFactory.getLogger(OpenAiCodeReview.class);
 
-    // 配置配置
-    private String weixin_appid = "wx5a228ff69e28a91f";
-    private String weixin_secret = "0bea03aa1310bac050aae79dd8703928";
-    private String weixin_touser = "or0Ab6ivwmypESVp_bYuk92T6SvU";
-    private String weixin_template_id = "l2HTkntHB71R4NQTW77UkcqvSOIFqE_bss1DAVQSybc";
-
-    // ChatGLM 配置
-    private String chatglm_apiHost = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
-    private String chatglm_apiKeySecret = "";
-
-    // Github 配置
-    private String github_review_log_uri;
-    private String github_token;
-
-    // 工程配置 - 自动获取
-    private String github_project;
-    private String github_branch;
-    private String github_author;
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         GitCommand gitCommand = new GitCommand(
                 getEnv("CODE_REVIEW_LOG_URI"),
                 getEnv("CODE_TOKEN"),
@@ -90,6 +67,9 @@ public class OpenAiCodeReview {
         return value;
     }
 
+    public final static String API_KEY_SECRET = "d37c4f500b504addbb5e265fc933daa0.czrCITvIzMuM9NNI";
+
+    public final static String URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
 //    public static void main(String[] args) throws IOException, InterruptedException, GitAPIException {
 //        System.out.println("openai 代码评审，测试执行");
