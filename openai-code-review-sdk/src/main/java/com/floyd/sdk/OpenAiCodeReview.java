@@ -85,7 +85,7 @@ public class OpenAiCodeReview {
     private static String getEnv(String key) {
         String value = System.getenv(key);
         if (null == value || value.isEmpty()) {
-            throw new RuntimeException("value is null");
+            throw new RuntimeException(String.format("value is null: %s", key));
         }
         return value;
     }
