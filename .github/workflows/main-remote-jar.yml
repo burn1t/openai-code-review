@@ -3,10 +3,10 @@ name: Build and Run OpenAiCodeReview By Main Maven Jar
 on:
   push:
     branches:
-      - master-close # 关闭执行
+      - master
   pull_request:
     branches:
-      - master-close
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,11 +23,17 @@ jobs:
           distribution: 'adopt'
           java-version: 11
 
-      - name: Build with Maven
-        run: mvn clean install
+#      - name: Build with Maven
+#        run: mvn clean install
+#
+#      - name: Copy openai-code-review-sdk JAR
+#        run: mvn dependency:copy -Dartifact=com.floyd:openai-code-review-sdk:1.0 -DoutputDirectory=./libs
 
-      - name: Copy openai-code-review-sdk JAR
-        run: mvn dependency:copy -Dartifact=com.floyd:openai-code-review-sdk:1.0 -DoutputDirectory=./libs
+      - name: Create libs directory
+        run: mkdir -p ./libs
+
+      - name: Download openai-code-review Jar
+        run: wget -0 ./libs/openai-code-review-sdk-1.0.jar https://github.com/burn1t/openai-code-review/releases/download/v1.0/openai-code-review-sdk-1.0.jar
 
       - name: Get repository name
         id: repo-name
