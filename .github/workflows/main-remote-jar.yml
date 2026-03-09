@@ -33,7 +33,7 @@ jobs:
         run: mkdir -p ./libs
 
       - name: Download openai-code-review Jar
-        run: wget -0 ./libs/openai-code-review-sdk-1.0.jar https://github.com/burn1t/openai-code-review/releases/download/v1.0/openai-code-review-sdk-1.0.jar
+        run: wget -O ./libs/openai-code-review-sdk-1.0.jar https://github.com/burn1t/openai-code-review/releases/download/v1.0/openai-code-review-sdk-1.0.jar
 
       - name: Get repository name
         id: repo-name
